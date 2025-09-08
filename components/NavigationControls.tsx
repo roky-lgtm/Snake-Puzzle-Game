@@ -22,26 +22,25 @@ const ArrowIcon: React.FC<{ rotation: string }> = ({ rotation }) => (
 
 const NavigationControls: React.FC<NavigationControlsProps> = ({ onDirectionChange }) => {
   
-  const handlePress = (e: React.MouseEvent | React.TouchEvent, direction: Direction) => {
+  const handleClick = (e: React.MouseEvent, direction: Direction) => {
     e.preventDefault(); // Prevents focus, double-tap zoom, etc.
     onDirectionChange(direction);
   };
 
   // Prevent context menu on long press for the whole control area
-  const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleContextMenu = (e: React.MouseEvent) => {
       e.preventDefault();
   };
 
   return (
     <div 
-        className="mt-6 grid grid-cols-3 grid-rows-3 gap-3 w-48 h-48 mx-auto select-none"
+        className="mt-2 sm:mt-4 grid grid-cols-3 grid-rows-3 gap-2 sm:gap-3 w-40 h-40 sm:w-48 sm:h-48 mx-auto select-none"
         onContextMenu={handleContextMenu}
         style={{ touchAction: 'manipulation' }} // Prevents zoom on double tap on some browsers
     >
       <div className="col-start-2 row-start-1">
         <button
-          onMouseDown={(e) => handlePress(e, 'UP')}
-          onTouchStart={(e) => handlePress(e, 'UP')}
+          onClick={(e) => handleClick(e, 'UP')}
           className="w-full h-full bg-black/30 backdrop-blur-sm rounded-xl flex items-center justify-center active:bg-white/30 transition-colors"
           aria-label="Move Up"
         >
@@ -50,8 +49,7 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({ onDirectionChan
       </div>
       <div className="col-start-1 row-start-2">
         <button
-          onMouseDown={(e) => handlePress(e, 'LEFT')}
-          onTouchStart={(e) => handlePress(e, 'LEFT')}
+          onClick={(e) => handleClick(e, 'LEFT')}
           className="w-full h-full bg-black/30 backdrop-blur-sm rounded-xl flex items-center justify-center active:bg-white/30 transition-colors"
           aria-label="Move Left"
         >
@@ -60,8 +58,7 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({ onDirectionChan
       </div>
       <div className="col-start-3 row-start-2">
         <button
-          onMouseDown={(e) => handlePress(e, 'RIGHT')}
-          onTouchStart={(e) => handlePress(e, 'RIGHT')}
+          onClick={(e) => handleClick(e, 'RIGHT')}
           className="w-full h-full bg-black/30 backdrop-blur-sm rounded-xl flex items-center justify-center active:bg-white/30 transition-colors"
           aria-label="Move Right"
         >
@@ -70,8 +67,7 @@ const NavigationControls: React.FC<NavigationControlsProps> = ({ onDirectionChan
       </div>
       <div className="col-start-2 row-start-3">
         <button
-          onMouseDown={(e) => handlePress(e, 'DOWN')}
-          onTouchStart={(e) => handlePress(e, 'DOWN')}
+          onClick={(e) => handleClick(e, 'DOWN')}
           className="w-full h-full bg-black/30 backdrop-blur-sm rounded-xl flex items-center justify-center active:bg-white/30 transition-colors"
           aria-label="Move Down"
         >

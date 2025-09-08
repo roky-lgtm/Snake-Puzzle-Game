@@ -168,21 +168,21 @@ const App: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen w-full p-4 font-sans" {...swipeHandlers}>
+    <div className="flex flex-col items-center justify-start sm:justify-center min-h-screen w-full p-2 sm:p-4 font-sans" {...swipeHandlers}>
        <div className="relative w-full max-w-lg mx-auto">
-          <header className="w-full text-center mb-4">
-            <h1 className="text-5xl font-bold text-white text-shadow" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.2)'}}>Snake Puzzle 3D</h1>
+          <header className="w-full text-center mb-2 sm:mb-4">
+            <h1 className="text-4xl sm:text-5xl font-bold text-white text-shadow" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.2)'}}>Snake Puzzle 3D</h1>
           </header>
           
-          <div className="w-full flex justify-between items-center mb-4 px-2 bg-white/30 backdrop-blur-sm p-3 rounded-xl">
-            <div className="text-lg font-semibold text-gray-800">Level: <span className="font-bold text-violet-600">{level.level_id}</span></div>
+          <div className="w-full flex justify-between items-center mb-2 sm:mb-4 px-2 bg-white/30 backdrop-blur-sm p-2 sm:p-3 rounded-xl">
+            <div className="text-base sm:text-lg font-semibold text-gray-800">Level: <span className="font-bold text-violet-600">{level.level_id}</span></div>
             {invincibilityTurns > 0 && (
-                 <div className="text-lg font-semibold text-blue-600 bg-white/50 px-3 py-1 rounded-lg">
+                 <div className="text-base sm:text-lg font-semibold text-blue-600 bg-white/50 px-3 py-1 rounded-lg">
                     Shield: {invincibilityTurns}
                 </div>
             )}
-            <div className="flex items-center gap-4">
-              <div className="text-lg font-semibold text-gray-800">Apples: <span className="font-bold text-red-600">{apples.length}</span></div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="text-base sm:text-lg font-semibold text-gray-800">Apples: <span className="font-bold text-red-600">{apples.length}</span></div>
               <MusicToggleButton isMusicEnabled={isMusicEnabled} onToggle={toggleMusic} />
             </div>
           </div>
@@ -206,16 +206,16 @@ const App: React.FC = () => {
             />
           </div>
           
-          <div className="mt-6 flex justify-center items-center space-x-4">
+          <div className="mt-2 sm:mt-4 flex justify-center items-center space-x-4">
              <button
               onClick={handleReturnToLevelSelect}
-              className="bg-gray-500 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-600 transition-colors duration-300 shadow-md"
+              className="bg-gray-500 text-white font-bold py-2 px-4 sm:px-6 rounded-xl hover:bg-gray-600 transition-colors duration-300 shadow-md"
             >
               Back to Levels
             </button>
             <button
               onClick={handleRestart}
-              className="bg-gray-700 text-white font-bold py-2 px-8 rounded-xl hover:bg-gray-800 transition-colors duration-300 shadow-md"
+              className="bg-gray-700 text-white font-bold py-2 px-6 sm:px-8 rounded-xl hover:bg-gray-800 transition-colors duration-300 shadow-md"
             >
               Restart
             </button>
