@@ -1,0 +1,5 @@
+{
+  "name": "Snake Puzzle: Slither to Eat",
+  "description": "A top-down puzzle game where you navigate a snake through mazes, eating apples to grow and reach the exit portal. The game focuses on strategic planning and problem-solving.",
+  "requestFramePermissions": []
+}
