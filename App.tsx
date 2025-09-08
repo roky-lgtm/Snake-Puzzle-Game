@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import GameBoard from './components/GameBoard';
 import Modal from './components/Modal';
+import LevelSelect from './components/LevelSelect';
 import { levels } from './data/levels';
 import { useGameLogic } from './hooks/useGameLogic';
 import { useKeyPress } from './hooks/useKeyPress';
 import { useSwipe } from './hooks/useSwipe';
+import { useSounds } from './hooks/useSounds';
 
 const App: React.FC = () => {
   const {
@@ -21,13 +23,15 @@ const App: React.FC = () => {
     toggleSpikes,
     isSpikeActive,
     invincibilityTurns,
+    highestUnlockedLevel,
     changeDirection,
     startGame,
     nextLevel,
     resetLevel,
   } = useGameLogic();
 
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [view, setView] = useState<'welcome' | 'level-select' | 'game'>('welcome');
+  const { playSound } = useSounds();
 
   useKeyPress((key) => {
     if (gameState === 'PLAYING') {
@@ -41,21 +45,28 @@ const App: React.FC = () => {
     }
   });
 
-  const handleStartGame = () => {
-    setShowWelcome(false);
-    startGame(0);
+  const handleSelectLevel = (levelIndex: number) => {
+    playSound('click');
+    startGame(levelIndex);
+    setView('game');
+  };
+
+  const handleReturnToLevelSelect = () => {
+    playSound('click');
+    setView('level-select');
   };
 
   const handleNextLevel = () => {
+    playSound('click');
     nextLevel();
   };
 
   const handleRestart = () => {
+    playSound('click');
     resetLevel();
   };
-
-  const renderModalContent = () => {
-    if (showWelcome) {
+  
+  if (view === 'welcome') {
       return (
         <Modal title="Snake Puzzle 3D" isOpen={true}>
           <p className="text-gray-600 mb-6">
@@ -67,15 +78,24 @@ const App: React.FC = () => {
             <p><strong>Mobile:</strong> Swipe Up, Down, Left, or Right</p>
           </div>
           <button
-            onClick={handleStartGame}
+            onClick={() => { playSound('gameStart'); setView('level-select'); }}
             className="mt-8 w-full bg-gradient-to-br from-green-400 to-cyan-500 text-white font-bold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity duration-300 shadow-lg"
           >
             Start Game
           </button>
         </Modal>
       );
-    }
+  }
+  
+  if (view === 'level-select') {
+      return <LevelSelect 
+        totalLevels={levels.length}
+        highestUnlockedLevel={highestUnlockedLevel}
+        onSelectLevel={handleSelectLevel}
+        />
+  }
 
+  const renderGameModals = () => {
     if (gameState === 'LEVEL_COMPLETE') {
       const isLastLevel = level.level_id === levels[levels.length - 1].level_id;
       return (
@@ -91,6 +111,12 @@ const App: React.FC = () => {
               Next Level
             </button>
           )}
+          <button
+              onClick={handleReturnToLevelSelect}
+              className="mt-3 w-full bg-gray-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-700 transition-colors duration-300 shadow-lg"
+            >
+              Level Select
+          </button>
         </Modal>
       );
     }
@@ -99,12 +125,20 @@ const App: React.FC = () => {
       return (
         <Modal title="Game Over" isOpen={true}>
           <p className="text-gray-600 mb-6">Oops! You crashed. Don't worry, give it another try.</p>
-          <button
-            onClick={handleRestart}
-            className="w-full bg-gradient-to-br from-red-500 to-orange-500 text-white font-bold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity duration-300 shadow-lg"
-          >
-            Restart Level
-          </button>
+           <div className="flex flex-col space-y-3">
+            <button
+                onClick={handleRestart}
+                className="w-full bg-gradient-to-br from-red-500 to-orange-500 text-white font-bold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity duration-300 shadow-lg"
+              >
+                Restart Level
+              </button>
+              <button
+                onClick={handleReturnToLevelSelect}
+                className="w-full bg-gray-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-700 transition-colors duration-300 shadow-lg"
+              >
+                Level Select
+              </button>
+          </div>
         </Modal>
       );
     }
@@ -143,10 +177,17 @@ const App: React.FC = () => {
               isSpikeActive={isSpikeActive}
               portalActive={apples.length === 0}
               isInvincible={invincibilityTurns > 0}
+              isEnteringPortal={gameState === 'ENTERING_PORTAL'}
             />
           </div>
           
-          <div className="mt-6 text-center">
+          <div className="mt-6 flex justify-center items-center space-x-4">
+             <button
+              onClick={handleReturnToLevelSelect}
+              className="bg-gray-500 text-white font-bold py-2 px-6 rounded-xl hover:bg-gray-600 transition-colors duration-300 shadow-md"
+            >
+              Back to Levels
+            </button>
             <button
               onClick={handleRestart}
               className="bg-gray-700 text-white font-bold py-2 px-8 rounded-xl hover:bg-gray-800 transition-colors duration-300 shadow-md"
@@ -156,7 +197,7 @@ const App: React.FC = () => {
           </div>
       </div>
       
-      {renderModalContent()}
+      {renderGameModals()}
     </div>
   );
 };

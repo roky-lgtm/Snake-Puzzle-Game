@@ -1,24 +1,26 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Coordinates, Direction, GameState, Level, PowerUp } from '../types';
 import { levels } from '../data/levels';
+import { useSounds } from './useSounds';
 
-const LOCAL_STORAGE_KEY = 'snake-puzzle-level';
+const HIGHEST_UNLOCKED_LEVEL_KEY = 'snake-puzzle-highest-unlocked-level';
 const INVINCIBILITY_DURATION = 5;
 
-const getInitialLevelIndex = (): number => {
-  const savedLevel = localStorage.getItem(LOCAL_STORAGE_KEY);
+const getHighestUnlockedLevel = (): number => {
+  const savedLevel = localStorage.getItem(HIGHEST_UNLOCKED_LEVEL_KEY);
   if (savedLevel) {
     const levelIndex = parseInt(savedLevel, 10);
     if (levelIndex >= 0 && levelIndex < levels.length) {
       return levelIndex;
     }
   }
-  return 0;
+  return 0; // The first level is always unlocked
 };
 
 export const useGameLogic = () => {
-  const [currentLevelIndex, setCurrentLevelIndex] = useState(getInitialLevelIndex);
+  const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [level, setLevel] = useState<Level>(levels[currentLevelIndex]);
+  const [highestUnlockedLevel, setHighestUnlockedLevel] = useState(getHighestUnlockedLevel);
   
   // Game state
   const [snake, setSnake] = useState<Coordinates[]>([]);
@@ -36,11 +38,13 @@ export const useGameLogic = () => {
   const [moveCount, setMoveCount] = useState(0);
   const [invincibilityTurns, setInvincibilityTurns] = useState(0);
   
+  const { playSound } = useSounds();
   const isSameCoord = (a: Coordinates, b: Coordinates) => a.x === b.x && a.y === b.y;
 
   const initLevel = useCallback((levelIndex: number) => {
     const newLevel = levels[levelIndex];
     setLevel(newLevel);
+    setCurrentLevelIndex(levelIndex);
     
     const { start, direction: initialDirection, length } = newLevel.initial_snake_position;
     const initialSnake: Coordinates[] = [];
@@ -69,7 +73,6 @@ export const useGameLogic = () => {
   }, []);
   
   const startGame = useCallback((levelIndex: number) => {
-    setCurrentLevelIndex(levelIndex);
     initLevel(levelIndex);
   }, [initLevel]);
 
@@ -96,25 +99,30 @@ export const useGameLogic = () => {
     if (!isInvincible) {
         // Wall collision
         if (head.x < 0 || head.x >= level.grid_size.width || head.y < 0 || head.y >= level.grid_size.height) {
+          playSound('gameOver');
           setGameState('GAME_OVER');
           return;
         }
         if (walls.some(wall => isSameCoord(wall, head))) {
+          playSound('gameOver');
           setGameState('GAME_OVER');
           return;
         }
         // Door collision
         if (doors.some(door => isSameCoord(door, head))) {
+            playSound('gameOver');
             setGameState('GAME_OVER');
             return;
         }
         // Spike collision
         if (toggleSpikes && isSpikeActive() && toggleSpikes.positions.some(spike => isSameCoord(spike, head))) {
+            playSound('gameOver');
             setGameState('GAME_OVER');
             return;
         }
         // Self collision
         if (newSnake.slice(1).some(segment => isSameCoord(segment, head))) {
+           playSound('gameOver');
            setGameState('GAME_OVER');
            return;
         }
@@ -129,6 +137,7 @@ export const useGameLogic = () => {
       const newApples = [...apples];
       newApples.splice(appleIndex, 1);
       setApples(newApples);
+      playSound('eat');
       ateApple = true;
     } else {
       newSnake.pop();
@@ -141,6 +150,7 @@ export const useGameLogic = () => {
         newKeys.splice(keyIndex, 1);
         setKeys(newKeys);
         setDoors([]); // Simple logic: one key opens all doors
+        playSound('collectKey');
     }
     
     // Power-up collision
@@ -158,6 +168,7 @@ export const useGameLogic = () => {
         const newPowerUps = [...powerUps];
         newPowerUps.splice(powerUpIndex, 1);
         setPowerUps(newPowerUps);
+        playSound('powerUp');
     }
     
     // Portal collision
@@ -165,10 +176,13 @@ export const useGameLogic = () => {
     const allApplesAlreadyEaten = apples.length === 0;
 
     if ((justAteLastApple || allApplesAlreadyEaten) && isSameCoord(head, portal)) {
-        setGameState('LEVEL_COMPLETE');
+        playSound('levelComplete');
+        setSnake(newSnake); // Move head into portal
+        setGameState('ENTERING_PORTAL'); // Start swallowing animation
         const nextLevelIndex = currentLevelIndex + 1;
-        if(nextLevelIndex < levels.length) {
-            localStorage.setItem(LOCAL_STORAGE_KEY, nextLevelIndex.toString());
+        if(nextLevelIndex > highestUnlockedLevel && nextLevelIndex < levels.length) {
+            setHighestUnlockedLevel(nextLevelIndex);
+            localStorage.setItem(HIGHEST_UNLOCKED_LEVEL_KEY, nextLevelIndex.toString());
         }
         return;
     }
@@ -180,7 +194,7 @@ export const useGameLogic = () => {
         setInvincibilityTurns(prev => prev - 1);
     }
 
-  }, [snake, gameState, apples, level.grid_size, walls, doors, keys, powerUps, toggleSpikes, portal, currentLevelIndex, invincibilityTurns, isSpikeActive]);
+  }, [snake, gameState, apples, level.grid_size, walls, doors, keys, powerUps, toggleSpikes, portal, currentLevelIndex, invincibilityTurns, isSpikeActive, playSound, highestUnlockedLevel]);
 
   const changeDirection = useCallback((newDirection: Direction) => {
     if (gameState !== 'PLAYING') return;
@@ -202,7 +216,6 @@ export const useGameLogic = () => {
   const nextLevel = useCallback(() => {
     const nextLevelIndex = currentLevelIndex + 1;
     if (nextLevelIndex < levels.length) {
-      setCurrentLevelIndex(nextLevelIndex);
       initLevel(nextLevelIndex);
     }
   }, [currentLevelIndex, initLevel]);
@@ -212,6 +225,25 @@ export const useGameLogic = () => {
     // startGame(0) is now called from the UI to avoid initializing game on page load behind the welcome modal.
   }, []);
   
+  // Effect for portal swallowing animation
+  useEffect(() => {
+    if (gameState !== 'ENTERING_PORTAL') return;
+
+    if (snake.length === 0) {
+      // Animation finished, show level complete modal
+      const finalTimer = setTimeout(() => {
+        setGameState('LEVEL_COMPLETE');
+      }, 200);
+      return () => clearTimeout(finalTimer);
+    }
+
+    const timer = setTimeout(() => {
+      setSnake(s => s.slice(1)); // Remove the head (swallow)
+    }, 80); // Speed of swallowing
+
+    return () => clearTimeout(timer);
+  }, [gameState, snake]);
+
   return {
     gameState,
     level,
@@ -226,6 +258,8 @@ export const useGameLogic = () => {
     toggleSpikes: toggleSpikes?.positions || [],
     isSpikeActive: isSpikeActive(),
     invincibilityTurns,
+    highestUnlockedLevel,
+    currentLevelIndex,
     changeDirection,
     startGame,
     nextLevel,

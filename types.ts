@@ -34,4 +34,4 @@ export interface Level {
   toggle_spikes?: { positions: Coordinates[]; interval: number, offset?: number };
 }
 
-export type GameState = 'WELCOME' | 'PLAYING' | 'GAME_OVER' | 'LEVEL_COMPLETE' | 'PAUSED';
+export type GameState = 'WELCOME' | 'PLAYING' | 'GAME_OVER' | 'LEVEL_COMPLETE' | 'PAUSED' | 'ENTERING_PORTAL';
