@@ -1,31 +1,16 @@
-
 import { useEffect } from 'react';
-import type { Direction } from '../types';
+import type { Direction, Controls } from '../types';
 
-export const useKeyPress = (callback: (key: Direction) => void) => {
+export const useKeyPress = (controls: Controls, callback: (direction: Direction) => void) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
-        case 'ArrowUp':
-        case 'w':
-          event.preventDefault();
-          callback('UP');
-          break;
-        case 'ArrowDown':
-        case 's':
-          event.preventDefault();
-          callback('DOWN');
-          break;
-        case 'ArrowLeft':
-        case 'a':
-          event.preventDefault();
-          callback('LEFT');
-          break;
-        case 'ArrowRight':
-        case 'd':
-          event.preventDefault();
-          callback('RIGHT');
-          break;
+      const direction = (Object.keys(controls) as Direction[]).find(
+        (dir) => controls[dir] === event.key
+      );
+
+      if (direction) {
+        event.preventDefault();
+        callback(direction);
       }
     };
 
@@ -34,5 +19,5 @@ export const useKeyPress = (callback: (key: Direction) => void) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [callback]);
+  }, [controls, callback]);
 };

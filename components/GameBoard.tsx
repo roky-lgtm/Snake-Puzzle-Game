@@ -261,8 +261,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
         
         @keyframes swallow {
           50% {
-            transform: scale(1.2);
-            box-shadow: 0 0 30px #f0f, inset 0 0 10px #fff;
+            transform: scale(1.3);
+            box-shadow: 0 0 30px #f0f, inset 0 0 20px #fff;
           }
         }
         

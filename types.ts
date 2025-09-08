@@ -35,3 +35,5 @@ export interface Level {
 }
 
 export type GameState = 'WELCOME' | 'PLAYING' | 'GAME_OVER' | 'LEVEL_COMPLETE' | 'PAUSED' | 'ENTERING_PORTAL';
+
+export type Controls = Record<Direction, string>;

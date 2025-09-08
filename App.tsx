@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import GameBoard from './components/GameBoard';
 import Modal from './components/Modal';
 import LevelSelect from './components/LevelSelect';
+import SettingsModal from './components/SettingsModal';
+import NavigationControls from './components/NavigationControls';
+import MusicToggleButton from './components/MusicToggleButton';
 import { levels } from './data/levels';
 import { useGameLogic } from './hooks/useGameLogic';
 import { useKeyPress } from './hooks/useKeyPress';
 import { useSwipe } from './hooks/useSwipe';
 import { useSounds } from './hooks/useSounds';
+import { useControls } from './hooks/useControls';
+import { useMusic } from './hooks/useMusic';
 
 const App: React.FC = () => {
   const {
@@ -31,9 +36,12 @@ const App: React.FC = () => {
   } = useGameLogic();
 
   const [view, setView] = useState<'welcome' | 'level-select' | 'game'>('welcome');
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
   const { playSound } = useSounds();
+  const { controls, saveControls } = useControls();
+  const { isMusicEnabled, toggleMusic, startMusicOnFirstInteraction } = useMusic();
 
-  useKeyPress((key) => {
+  useKeyPress(controls, (key) => {
     if (gameState === 'PLAYING') {
       changeDirection(key);
     }
@@ -68,22 +76,36 @@ const App: React.FC = () => {
   
   if (view === 'welcome') {
       return (
-        <Modal title="Snake Puzzle 3D" isOpen={true}>
-          <p className="text-gray-600 mb-6">
-            Guide the snake to eat all the apples. Once you've eaten them all, slither to the portal to complete the level. Watch out for obstacles and use power-ups!
-          </p>
-          <div className="text-sm text-gray-500 text-left mx-auto max-w-xs">
-            <h3 className="font-bold mb-2 text-center">Controls:</h3>
-            <p><strong>Desktop:</strong> Use Arrow Keys</p>
-            <p><strong>Mobile:</strong> Swipe Up, Down, Left, or Right</p>
-          </div>
-          <button
-            onClick={() => { playSound('gameStart'); setView('level-select'); }}
-            className="mt-8 w-full bg-gradient-to-br from-green-400 to-cyan-500 text-white font-bold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity duration-300 shadow-lg"
-          >
-            Start Game
-          </button>
-        </Modal>
+        <>
+            <Modal title="Snake Puzzle 3D" isOpen={true}>
+              <p className="text-gray-600 mb-6">
+                Guide the snake to eat all the apples. Once you've eaten them all, slither to the portal to complete the level. Watch out for obstacles and use power-ups!
+              </p>
+              <div className="text-sm text-gray-500 text-left mx-auto max-w-xs">
+                <h3 className="font-bold mb-2 text-center">Controls:</h3>
+                <p><strong>Desktop:</strong> Use Arrow Keys (customizable in settings)</p>
+                <p><strong>Mobile:</strong> Swipe Up, Down, Left, or Right</p>
+              </div>
+              <button
+                onClick={() => { playSound('gameStart'); startMusicOnFirstInteraction(); setView('level-select'); }}
+                className="mt-8 w-full bg-gradient-to-br from-green-400 to-cyan-500 text-white font-bold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity duration-300 shadow-lg"
+              >
+                Start Game
+              </button>
+              <button
+                onClick={() => { playSound('click'); setSettingsOpen(true); }}
+                className="mt-3 w-full bg-gray-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-700 transition-colors duration-300 shadow-lg"
+              >
+                Settings
+              </button>
+            </Modal>
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setSettingsOpen(false)}
+                currentControls={controls}
+                onSave={saveControls}
+            />
+        </>
       );
   }
   
@@ -159,7 +181,10 @@ const App: React.FC = () => {
                     Shield: {invincibilityTurns}
                 </div>
             )}
-            <div className="text-lg font-semibold text-gray-800">Apples: <span className="font-bold text-red-600">{apples.length}</span></div>
+            <div className="flex items-center gap-4">
+              <div className="text-lg font-semibold text-gray-800">Apples: <span className="font-bold text-red-600">{apples.length}</span></div>
+              <MusicToggleButton isMusicEnabled={isMusicEnabled} onToggle={toggleMusic} />
+            </div>
           </div>
 
           <div className="bg-white/30 backdrop-blur-sm p-2 rounded-2xl shadow-lg">
@@ -195,6 +220,10 @@ const App: React.FC = () => {
               Restart
             </button>
           </div>
+          
+          {gameState === 'PLAYING' && (
+            <NavigationControls onDirectionChange={changeDirection} />
+          )}
       </div>
       
       {renderGameModals()}
